@@ -17,6 +17,7 @@ describe('Integration test with visual testing', function () {
         console.log('video paused')
       })
     })
+
     cy.get('@Video').should('have.prop', 'paused', true)
     // Take a snapshot for visual diffing
     cy.percySnapshot('HomePage screen shot without pressing play/pause');
@@ -25,7 +26,12 @@ describe('Integration test with visual testing', function () {
 
   it('Testing video after pressing Play/Pause', function () {
     // Load the page or perform any other interactions with the app.
-
+    cy.on('uncaught:exception', (e, runnable) => {
+      console.log('error is ', e.message)
+      console.log('runnable is ', runnable)
+      if (e.message.includes('The play() request was interrupted by a call to pause()'))
+        return false
+    })
     cy.get('video').as('Video')
       .should('have.prop', 'paused', true)
       .should('have.prop', 'ended', false)
@@ -42,8 +48,8 @@ describe('Integration test with visual testing', function () {
   });
 
 
- it('Just takes screenshot of main page', function(){
+  it('Just takes screenshot of main page', function () {
 
-  cy.screenshot()
- })
+    cy.screenshot()
+  })
 });
