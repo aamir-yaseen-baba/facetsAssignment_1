@@ -7,11 +7,6 @@ describe('this includes cookie tests', () => {
         Cypress.Cookies.preserveOnce('auth_key')
     })
     it('Set and Get cookie value', function () {
-        cy.on('uncaught:exception', (e, runnable) => {
-            console.log('error is ', e.message)
-            console.log('runnable is ', runnable)
-              return false
-          })
         cy.get('#onetrust-accept-btn-handler').click()
         Cypress.Cookies.debug(true)
         cy.setCookie('auth_key', '123key')
@@ -20,11 +15,6 @@ describe('this includes cookie tests', () => {
     })
 
     it('get preserved cookie value', function () {
-        cy.on('uncaught:exception', (e, runnable) => {
-            console.log('error is ', e.message)
-            console.log('runnable is ', runnable)
-              return false
-          })
         cy
         .getCookie('auth_key')
          .should('have.property', 'value', '123key')

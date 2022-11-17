@@ -25,6 +25,11 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 
+Cypress.on('uncaught:exception', (e, runnable) => {
+    console.log('error is ', e.message)
+    console.log('runnable is ', runnable)
+      return false
+  })
 Cypress.Commands.add('switchToiframe', (iframe)=>{
     return cy
     .get('iframe')
