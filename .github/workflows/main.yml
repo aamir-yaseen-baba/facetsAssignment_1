@@ -46,10 +46,10 @@ jobs:
         uses: cypress-io/github-action@v2
         timeout-minutes: 70
         with:
-          command: percy exec -- cypress run
+          command: cypress run
           wait-on: 'https://thefxcstg.prod.acquia-sites.com/'
           # Enable the following lines if the tests would be executed for stage site
-          # command: npm run percy-vr-chrome:stage
+          # command: npm run percy-vr-chrome:stage # percy exec --
           # wait-on: 'https://esiwebteam:$esi351esi$@esicorporatewebsitestg.prod.acquia-sites.com'
 
           browser: chrome
