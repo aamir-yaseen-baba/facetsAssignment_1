@@ -1,0 +1,92 @@
+name: facets-esi-vr-tests
+on:
+  push:
+    branches-ignore:
+      - 'renovate/**'
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    env:
+      # prevents extra Cypress installation progress messages
+      CI: 1
+      # avoid warnings like "tput: No value for $TERM and no -T specified"
+      TERM: xterm
+    container:
+      image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+      options: --user 1001 #Added as a part of this issue: https://github.com/cypress-io/github-action/issues/446#issuecomment-987015822
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cypress install
+        uses: cypress-io/github-action@v2
+        with:
+          # Disable running of tests within install job
+          runTests: false
+          env: export PERCY_POSTINSTALL_BROWSER=true
+  ui-chrome-tests:
+    timeout-minutes: 70
+    runs-on: ubuntu-latest
+    container:
+      image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
+      options: --user 1001 #Added as a part of this issue: https://github.com/cypress-io/github-action/issues/446#issuecomment-987015822
+    needs: install
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         # run copies of the current job in parallel
+#         ci_node_total: [5] # Based on your test size, modify this value, Example for 5 parallel tests, it would be [5] and # ci_node_index value below would be [1,2,3,4,5] and PERCY_PARALLEL_TOTAL would be 5
+#         ci_node_index: [1, 2, 3, 4, 5]
+    name: E2E visual tests execution for spec file 
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: 'VR tests'
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 70
+        with:
+          command: percy exec -- cypress run
+          wait-on: 'https://thefxcstg.prod.acquia-sites.com/'
+          # Enable the following lines if the tests would be executed for stage site
+          # command: npm run percy-vr-chrome:stage
+          # wait-on: 'https://esiwebteam:$esi351esi$@esicorporatewebsitestg.prod.acquia-sites.com'
+
+          browser: chrome
+          # Enable the following lines if you want to use cypress dashboard limited free service
+          # record: true
+          # parallel: true
+          tag: visual-regression
+          group: 'vr-tests-chrome'
+        env:
+          # Please configure the below, if you want to experiment cypress dashboard service
+          # Please refer the pricing:https://www.cypress.io/pricing/ and reference: https://docs.cypress.io/guides/dashboard/projects
+          # CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          # CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+
+          # Recommended: pass the GitHub token lets this action correctly
+          # determine the unique run id necessary to re-run the checks
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           CI_NODE_TOTAL: ${{ matrix.ci_node_total }}
+#           CI_NODE_INDEX: ${{ matrix.ci_node_index }}
+
+          # Please refer this for percy integration: https://dev.to/digitaledawn/github-action-cypress-and-percy-parallelisation-setup-484a
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+          # set this value equals to ci_node_total
+          PERCY_PARALLEL_TOTAL: 5
+          PERCY_PARALLEL_NONCE: '${{ github.event_name }}-${{ github.sha }}'
+          PERCY_TARGET_BRANCH: 'main'
+          PERCY_BRANCH: ${{ github.head_ref }}
+          COMMIT_INFO_BRANCH: ${{ github.head_ref }}
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+      # Test run video was always captured, so this action uses "always()" condition
+      # - uses: actions/upload-artifact@v2
+      #   if: always()
+      #   with:
+      #     name: cypress-videos
+      #     path: cypress/videos
